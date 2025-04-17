@@ -1,0 +1,16 @@
+server/bans.json
+server/verify.json
+server/motd.md
+server/remote.lctsc
+server/local.lctsc
+launcher/server/bans.json
+launcher/server/verify.json
+launcher/server/motd.md
+launcher/server/remote.lctsc
+launcher/server/local.lctsc
+debug
+build
+bot/tokens.json
+vpn/keys.json
+vpn/requests.json
+server/data

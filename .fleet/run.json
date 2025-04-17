@@ -1,0 +1,12 @@
+{
+    "configurations": [
+        {
+            "type": "command",
+            "name": "Client",
+            "program": "$PROJECT_DIR$/launcher/client/node_modules/electron/dist/Electron.app/Contents/MacOS/Electron",
+            "args": ["main.js", "$PROJECT_DIR$/client"],
+            "workingDir": "$PROJECT_DIR$/launcher/client",
+        },
+        
+    ]
+}

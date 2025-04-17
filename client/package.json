@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "@cliqz/adblocker-electron": "^1.26.12",
+    "@electron/remote": "^2.1.2",
+    "cross-fetch": "^4.0.0",
+    "systeminformation": "^5.22.6"
+  }
+}

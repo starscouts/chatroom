@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title></title>
+    <style>
+        * {
+            font-family: system-ui, -apple-system, sans-serif;
+            user-select: none;
+            -webkit-user-drag: none;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            main {
+                filter: invert(1) hue-rotate(180deg);
+                background-color: #ddd !important;
+            }
+
+            img {
+                filter: invert(1) hue-rotate(180deg);
+            }
+        }
+    </style>
+    <link rel="icon" href="../assets/icons/about.svg">
+</head>
+<body style="background-color: #fff;">
+<main style="background-color: #fff; position: fixed; inset: 0; padding: 20px; overflow: auto;">
+    <h4 style="margin-top: 0; margin-bottom: 10px;">About Chatroom</h4>
+
+    <div style="display: grid; grid-template-columns: 38px 1fr; grid-gap: 10px;">
+        <img src="../assets/icon.png" alt="" style="width: 38px; height: 38px;">
+        <div style="display: flex; align-items: center;">
+            <div>
+                <div><b>Chatroom 2</b> "Blep"</div>
+                <div style="opacity: .5;">Version <span id="version"></span> (<span id="platform"></span>, <span id="arch"></span>)</div>
+            </div>
+        </div>
+    </div>
+
+    <hr style="border-top: 1px solid rgba(0, 0, 0, .25); border-bottom: none;">
+
+    <p>Based on Chromium <span id="chrome">-</span></p>
+    <p>Chatroom Web Browser<br>Copyright 2023-2024 Equestria.dev. Released under the GNU AGPLv3 license.</p>
+    <p>Chatroom is made possible by the Chromium, Electron and Node.js open source projects.</p>
+
+    <code style="font-family: monospace; display: none;" id="advanced">
+        V8 <span style="font-family: monospace;" id="v8"></span><br>
+        Node.js <span style="font-family: monospace;" id="node"></span><br>
+        Electron <span style="font-family: monospace;" id="electron"></span><br>
+    </code>
+
+    <script>
+        if (localStorage.getItem("cr3-trial-experiments") === "true") {
+            document.getElementById("advanced").style.display = "";
+        }
+
+        (async () => {
+            document.getElementById("version").innerText = await window.parent.chatroom.getVersion();
+            document.getElementById("platform").innerText = process.platform;
+            document.getElementById("arch").innerText = process.arch;
+            document.getElementById("chrome").innerText = process.versions.chrome;
+            document.getElementById("v8").innerText = process.versions.v8;
+            document.getElementById("node").innerText = process.versions.node;
+            document.getElementById("electron").innerText = process.versions.electron;
+        })();
+    </script>
+</main>
+</body>
+</html>

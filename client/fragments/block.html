@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Chatroom</title>
+    <style>
+        * {
+            font-family: system-ui, -apple-system, sans-serif;
+            user-select: none;
+            -webkit-user-drag: none;
+        }
+
+        .btn {
+            box-shadow: 0 0 0 0 rgb(0 0 136 / 10%);
+            transition: box-shadow 200ms, background-color 200ms;
+        }
+
+        .btn:hover {
+            box-shadow: 0 0 0 5px rgb(0 0 136 / 10%);
+            background-color: #000066 !important;
+        }
+
+        .btn:active {
+            box-shadow: 0 0 0 10px rgb(0 0 136 / 10%);
+            background-color: #000044 !important;
+        }
+    </style>
+</head>
+<body>
+    <div style="display: flex; align-items: center; justify-content: center; position: fixed; inset: 0; background-color: white; background-image: linear-gradient(180deg, rgba(255,255,255,1) 0%, rgba(222,222,222,1) 100%);">
+        <div style="text-align: center;">
+            <h1 style="margin-top: 0; margin-bottom: 40px;">It's time for a change.</h1>
+            <div style="margin-bottom: 40px;">
+                <img src="./old.svg" alt="Localchat" style="width: 96px; vertical-align: middle;"><span style="vertical-align: middle; font-size: 38px; margin-left: 20px; margin-right: 17px;">→</span>
+                <img src="../assets/icon.svg" alt="Chatroom" style="width: 96px; vertical-align: middle;">
+            </div>
+            <div style="margin-bottom: 40px; max-width: 80%; margin-left: auto; margin-right: auto;">Localchat is now Chatroom, and is completely different from the original application. Enjoy an improved experience with a ton of new features in this new application. To do this, you will need to contact your administrator to receive the new launcher update along with your username and password.</div>
+            <div style="color: white; background-color: #000088; padding: 10px 20px; border-radius: 10px; width: max-content; margin-left: auto; margin-right: auto; cursor: pointer;" onclick="window.close();" class="btn">Quit Localchat</div>
+        </div>
+    </div>
+</body>
+</html>

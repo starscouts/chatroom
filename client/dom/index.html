@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Chatroom Web Browser</title>
+    <link href="../assets/bootstrap/bs.css" rel="stylesheet">
+    <script src="../assets/bootstrap/bs.js"></script>
+    <style>
+        * {
+            -webkit-user-drag: none;
+            user-select: none;
+        }
+
+        .wv-container {
+            display: none;
+        }
+
+        .nav-item.pinned .tab-close, .nav-item.pinned .tab-text {
+            display: none !important;
+        }
+
+        .wv-container.open {
+            height: 100%;
+            width: 100%;
+            display: block;
+        }
+
+        .wv-container.open webview {
+            display: flex;
+            width: 100%;
+            height: calc(100% - 48px);
+        }
+
+        .wv-container.no-bar.open webview {
+            height: 100%;
+        }
+
+        .wv-container.no-bar .bar {
+            display: none !important;
+        }
+
+        html, body, #windows {
+            height: calc(100% - 14px);
+        }
+
+        .nav-item, .nav-item * {
+            color: black;
+            -webkit-app-region: no-drag;
+        }
+
+        .nav-item:not(.active):hover {
+            background-color: rgba(255, 255, 255, .5);
+            border-radius: var(--bs-nav-tabs-border-radius);
+        }
+
+        .nav-item:not(.active):hover .nav-link {
+            border-color: transparent !important;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            #tabs, .bar {
+                background-color: #ddd;
+                filter: invert(1) hue-rotate(180deg);
+            }
+
+            .nav-link.active {
+                background-color: #ddd !important;
+                border-bottom: none !important;
+            }
+
+            img:not([src$=".svg"]) {
+                filter: invert(1) hue-rotate(180deg);
+            }
+
+            #windows, body {
+                background-color: #111111;
+            }
+
+            webview {
+                background-color: #111;
+            }
+
+            .modal {
+                filter: invert(1) hue-rotate(180deg);
+            }
+        }
+
+        .small-1 .tab-text {
+            width: 100px !important;
+        }
+
+        .small-2 .tab-text {
+            width: 50px !important;
+        }
+
+        .small-3 .tab-text {
+            opacity: 0 !important;
+            width: 7px !important;
+        }
+
+        .small-4 .tab-text, .small-4 .tab-close {
+            display: none !important;
+        }
+
+        .small-5 .nav-link {
+            padding: 0.5rem !important;
+        }
+
+        .small-6 .nav-link img {
+            width: 16px !important;
+            height: 24px !important;
+            padding: 4px 0 !important;
+        }
+    </style>
+</head>
+<body style="overflow: hidden;">
+    <ul id="tabs" class="nav nav-tabs" style="background-color: #eee; -webkit-app-region: drag;"></ul>
+    <script>
+        if (process.platform === "darwin") {
+            document.getElementById("tabs").style.paddingLeft = "86px";
+        } else {
+            document.getElementById("tabs").style.paddingRight = "140px";
+        }
+    </script>
+    <div id="windows" style="display: flex;"></div>
+
+    <script>
+        const ipcRenderer = require('electron').ipcRenderer;
+
+        window.tabs = [];
+        window.activeTab = -1;
+        window.protectionEnabled = localStorage.getItem("protection-status") !== "false";
+        refreshInternalProtection();
+
+        function toggleProtection() {
+            window.protectionEnabled = !window.protectionEnabled;
+            localStorage.setItem("protection-status", JSON.stringify(window.protectionEnabled));
+            refreshInternalProtection();
+            refreshTabBar();
+        }
+
+        function refreshInternalProtection() {
+            if (window.protectionEnabled) {
+                ipcRenderer.send("enable-protection");
+            } else {
+                ipcRenderer.send("disable-protection");
+            }
+        }
+
+        function refreshTabBar() {
+            let id = window.activeTab;
+
+            if (id > -1) {
+                Array.from(document.getElementById("windows").children).map((i) => {
+                    i.classList.remove("open");
+                });
+
+                tabs[id].webview.classList.add("open");
+            }
+
+            document.getElementById("tabs").innerHTML = `<div style="display: grid; grid-template-columns: 1fr max-content; width: 100%;"><span>` + window.tabs.map((i, j) => { i['_i'] = j; return i; }).filter(i => i.small).map((i) => `
+            <li class="nav-item pinned" style="width: max-content; display: inline-block;">
+                <a class="nav-link ${i['_i'] === window.activeTab ? 'active' : ''}" aria-current="page" href="#" onclick="if (event.target.classList.contains('nav-link')) switchToTab(${i['_i']});"><img onerror="event.target.src = '../assets/icons/placeholder.svg';" style="width: 24px; height: 24px; pointer-events: none;" alt="" src="${i.icon}"></a>
+            </li>
+            `).join("") + `<span class="text-muted">&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;</span>` + window.tabs.map((i, j) => { i['_i'] = j; return i; }).filter(i => !i.small).map((i) => `
+            <li class="nav-item" style="width: max-content; display: inline-block;">
+                <a class="nav-link ${i['_i'] === window.activeTab ? 'active' : ''}" aria-current="page" href="#" onclick="if (event.target.classList.contains('nav-link')) switchToTab(${i['_i']});"><img onerror="event.target.src = '../assets/icons/placeholder.svg';" style="width: 24px; height: 24px; pointer-events: none;" alt="" src="${i.icon}"><span class="tab-text" onclick="switchToTab(${i['_i']});" style="vertical-align: middle; margin-left: 5px; width: 171px; display: inline-block; white-space: nowrap; overflow: hidden !important; text-overflow: ellipsis">${i.name}</span><span class="tab-close" style="display: inline-block;" onclick="event.preventDefault(); closeTab(${i['_i']});"><img alt="" src="../assets/icons/dismiss.svg"></span></a>
+            </li>
+            `).join("") + `<li class="nav-item" style="width: max-content; display: inline-block;">
+                <a class="nav-link" aria-current="page" href="#" onclick="openHome();"><img alt="" src="../assets/icons/new.svg"></a>
+            </li></span><span><li class="nav-item" style="width: max-content; display: inline-block;">
+                <a class="nav-link" aria-current="page" href="#" onclick="toggleProtection();"><img id="ad-protection-img" alt="" src="../assets/icons/${window.protectionEnabled ? 'shield-on' : 'shield-off'}.svg"></a>
+            </li></span></div>`;
+
+            if (tabs[window.activeTab]) document.title = tabs[window.activeTab].name + " · Chatroom Workspace";
+
+            secureTabHeight();
+        }
+
+        let lastTabHeightUpdateCount = tabs.length;
+
+
+        function secureTabHeight(force) {
+            let first = false;
+            let i = 0;
+
+            while ((!first || document.getElementById("tabs").clientHeight > 43) && i < 10) {
+                if (document.getElementById("tabs").clientHeight > 43 && !document.getElementById("tabs").classList.contains("small-1")) {
+                    document.getElementById("tabs").classList.add("small-1");
+                } else if (document.getElementById("tabs").clientHeight > 43 && !document.getElementById("tabs").classList.contains("small-2")) {
+                    document.getElementById("tabs").classList.add("small-1");
+                    document.getElementById("tabs").classList.add("small-2");
+                } else if (document.getElementById("tabs").clientHeight > 43 && !document.getElementById("tabs").classList.contains("small-3")) {
+                    document.getElementById("tabs").classList.add("small-1");
+                    document.getElementById("tabs").classList.add("small-2");
+                    document.getElementById("tabs").classList.add("small-3");
+                } else if (document.getElementById("tabs").clientHeight > 43 && !document.getElementById("tabs").classList.contains("small-4")) {
+                    document.getElementById("tabs").classList.add("small-1");
+                    document.getElementById("tabs").classList.add("small-2");
+                    document.getElementById("tabs").classList.add("small-3");
+                    document.getElementById("tabs").classList.add("small-4");
+                } else if (document.getElementById("tabs").clientHeight > 43 && !document.getElementById("tabs").classList.contains("small-5")) {
+                    document.getElementById("tabs").classList.add("small-1");
+                    document.getElementById("tabs").classList.add("small-2");
+                    document.getElementById("tabs").classList.add("small-3");
+                    document.getElementById("tabs").classList.add("small-4");
+                    document.getElementById("tabs").classList.add("small-5");
+                } else if (document.getElementById("tabs").clientHeight > 43 && !document.getElementById("tabs").classList.contains("small-6")) {
+                    document.getElementById("tabs").classList.add("small-1");
+                    document.getElementById("tabs").classList.add("small-2");
+                    document.getElementById("tabs").classList.add("small-3");
+                    document.getElementById("tabs").classList.add("small-4");
+                    document.getElementById("tabs").classList.add("small-5");
+                    document.getElementById("tabs").classList.add("small-6");
+                } else {
+                    if (force || tabs.length < lastTabHeightUpdateCount) {
+                        document.getElementById("tabs").classList.remove("small-1");
+                        document.getElementById("tabs").classList.remove("small-2");
+                        document.getElementById("tabs").classList.remove("small-3");
+                        document.getElementById("tabs").classList.remove("small-4");
+                        document.getElementById("tabs").classList.remove("small-5");
+                        document.getElementById("tabs").classList.remove("small-6");
+                    }
+                }
+
+                first = true;
+                i++;
+            }
+
+            if (i >= 10) {
+                closeTab(tabs.length - 1);
+            }
+
+            lastTabHeightUpdateCount = tabs.length;
+        }
+
+        window.onresize = () => {
+            secureTabHeight(true);
+        }
+
+        function reloadWebview(force) {
+            if (force) {
+                tabs[activeTab].webview.children[1].reloadIgnoringCache();
+            } else {
+                tabs[activeTab].webview.children[1].reload();
+            }
+        }
+
+        function loadURL(id) {
+            let query = document.getElementById("wv-item-" + id + "-bar-address").value;
+
+            try {
+                new URL(query);
+                document.getElementById("wv-item-" + id + "-inner").loadURL(query);
+            } catch (e) {
+                document.getElementById("wv-item-" + id + "-inner").loadURL("https://duckduckgo.com/?q=" + encodeURIComponent(query));
+            }
+        }
+
+        function resetURL(id) {
+            if (document.getElementById("wv-item-" + id + "-inner").getURL().startsWith("file://") && document.getElementById("wv-item-" + id + "-inner").getURL().endsWith("/fragments/home.html")) {
+                document.getElementById("wv-item-" + id + "-bar-address").value = "";
+            } else {
+                document.getElementById("wv-item-" + id + "-bar-address").value = document.getElementById("wv-item-" + id + "-inner").getURL();
+            }
+        }
+
+        function openTab(url, focusSearchBar, pinned/* # M3 backport # */, unisolated/* # */) {
+            let container = document.createElement("div");
+            let webview = document.createElement("webview");
+
+            let tab = {
+                icon: "../assets/icons/placeholder.svg",
+                name: "New Tab",
+                url,
+                fixed: null,
+                webview: container,
+                id: crypto.randomUUID(),
+                small: url.includes("school.equestria.dev") || pinned
+            }
+
+            if (url.includes("school.equestria.dev") || pinned) {
+                container.classList.add("no-bar");
+            }
+
+            let bar = document.createElement("div");
+            bar.id = "wv-item-" + tab.id + "-bar";
+            bar.style.height = "47px";
+            bar.style.borderBottom = "1px solid rgba(0, 0, 0, .1)";
+            bar.style.paddingLeft = bar.style.paddingRight = "3vw";
+            bar.style.display = "grid";
+            bar.style.gridTemplateColumns = "1fr max-content 1fr";
+            bar.classList.add("bar");
+            bar.innerHTML = `
+            <div>
+                <a><img id="wv-item-${tab.id}-bar-back" src="../assets/icons/back.svg" alt="Back" title="Back" style="width: 24px; height: 24px; margin: 12px; cursor: pointer;" onclick="goBack('${tab.id}');"></a>
+                <a><img id="wv-item-${tab.id}-bar-forward" src="../assets/icons/forward.svg" alt="Forward" title="Forward" style="width: 24px; height: 24px; margin: 12px; cursor: pointer;" onclick="goForward('${tab.id}');"></a>
+                <a><img id="wv-item-${tab.id}-bar-reload" src="../assets/icons/reload.svg" alt="Refresh" title="Refresh" style="width: 24px; height: 24px; margin: 12px; cursor: pointer;" onclick="reloadTab('${tab.id}');"></a>
+            </div>
+            <div>
+                <input onchange="resetURL('${tab.id}');" id="wv-item-${tab.id}-bar-address" type="text" class="form-control" style="margin-top: 4px; width: 100vw; max-width: 500px;" placeholder="Search with DuckDuckGo or enter address">
+            </div>
+            <div style="text-align: right;"></div>
+            `.replaceAll("\n", "");
+            container.append(bar);
+
+            webview.src = url;
+            webview.preload = "../plugin.js";
+            webview.id = "wv-item-" + tab.id + "-inner";
+            container.id = "wv-item-" + tab.id;
+            container.classList.add("wv-container");
+            // # M3 backport #
+            webview.setAttribute("allowpopups", "");
+            if (unisolated) webview.setAttribute("nodeintegration", "");
+            if (unisolated) webview.setAttribute("nodeintegrationinsubframes", "");
+            if (unisolated) webview.setAttribute("webpreferences", "contextIsolation=false");
+            // # ----------- #
+            webview.addEventListener('devtools-open-url', (e) => {
+                openTab(e.url);
+            });
+            webview.addEventListener('close', () => {
+                closeTab(tabs.map((i, j) => [i, j]).filter(i => i[0].id === tab.id)[0][1]);
+            });
+            webview.addEventListener('page-title-updated', (e) => {
+                if (webview.getURL().startsWith("https://school.equestria.dev/")) {
+                    tab.name = "Chat";
+                } else {
+                    tab.name = e.title;
+                }
+
+                refreshTabBar();
+            });
+            webview.addEventListener('context-menu', (e) => {
+                ipcRenderer.send('menu', e.params);
+            });
+            webview.addEventListener('page-favicon-updated', (e) => {
+                if (webview.getURL().startsWith("https://school.equestria.dev/")) {
+                    tab.icon = "../assets/icons/chat.svg";
+                } else {
+                    tab.icon = e.favicons[0] ?? "../assets/icons/placeholder.svg";
+                }
+
+                refreshTabBar();
+            });
+            webview.addEventListener('will-navigate', (e) => {
+                document.getElementById("wv-item-" + tab.id + "-bar-address").value = e.url;
+                document.getElementById("wv-item-" + tab.id + "-bar-reload").src = "../assets/icons/stop.svg";
+            });
+            webview.addEventListener('did-navigate', () => {
+                document.getElementById("wv-item-" + tab.id + "-bar-reload").src = "../assets/icons/reload.svg";
+                resetURL(tab.id);
+            });
+            webview.addEventListener('did-navigate-in-page', () => {
+                resetURL(tab.id);
+            });
+            webview.addEventListener('did-finish-load', () => {
+                resetURL(tab.id);
+            });
+            webview.addEventListener('did-fail-load', () => {
+                resetURL(tab.id);
+            });
+
+            container.append(webview);
+            document.getElementById("windows").append(container);
+
+            document.getElementById('wv-item-' + tab.id + '-bar-address').onkeydown = (e) => {
+                if (e.code === "Return" || e.code === "Enter") {
+                    loadURL(tab.id);
+                    document.getElementById('wv-item-' + tab.id + '-bar-address').blur();
+                }
+            }
+
+            tabs.push(tab);
+
+            refreshTabBar();
+            switchToTab(tabs.length - 1);
+
+            if (focusSearchBar) {
+                document.getElementById("wv-item-" + tab.id + "-bar-address").focus();
+            }
+        }
+
+        function switchToTab(id) {
+            window.activeTab = id;
+            refreshTabBar();
+
+            if (!tabs[id].fixed && tabs[id].small) {
+                tabs[id].webview.children[1].style.height = "0";
+
+                setTimeout(() => {
+                    tabs[id].webview.children[1].style.height = "100%";
+                }, 100);
+
+                tabs[id].fixed = true;
+            }
+        }
+
+        function reloadTab(id) {
+            if (document.getElementById("wv-item-" + id + "-bar-reload").src.endsWith("/stop.svg")) {
+                document.getElementById("wv-item-" + id + "-inner").stop();
+            } else {
+                document.getElementById("wv-item-" + id + "-inner").loadURL(document.getElementById("wv-item-" + id + "-inner").getURL());
+            }
+        }
+
+        function goBack(id) {
+            document.getElementById("wv-item-" + id + "-inner").goBack();
+        }
+
+        function goForward(id) {
+            document.getElementById("wv-item-" + id + "-inner").goForward();
+        }
+
+        function openHome() {
+            openTab("../fragments/home.html", true);
+        }
+
+        function closeTab(id) {
+            if (tabs[id]['small']) return;
+
+            if (id === window.activeTab) {
+                closeCurrentTab();
+                return;
+            } else if (window.activeTab > id) {
+                window.activeTab--;
+            }
+
+            document.getElementById("wv-item-" + tabs[id].id).outerHTML = "";
+            window.tabs = tabs.filter((i, j) => j !== id);
+
+            refreshTabBar();
+        }
+
+        function closeCurrentTab() {
+            if (tabs[window.activeTab]['small']) return;
+
+            let oldActiveTab = window.activeTab;
+            let newActiveTab = window.activeTab;
+
+            if (tabs.length === 1) {
+                window.close();
+                return;
+            } else if (newActiveTab === tabs.length - 1) {
+                newActiveTab--;
+            }
+
+            document.getElementById("wv-item-" + tabs[oldActiveTab].id).outerHTML = "";
+            window.tabs = tabs.filter((i, j) => j !== oldActiveTab);
+
+            switchToTab(newActiveTab);
+        }
+
+        function switchRight() {
+            if (tabs[window.activeTab + 1]) {
+                switchToTab(window.activeTab + 1);
+            } else {
+                switchToTab(0);
+            }
+        }
+
+        function switchLeft() {
+            if (tabs[window.activeTab - 1]) {
+                switchToTab(window.activeTab - 1);
+            } else {
+                switchToTab(tabs.length - 1);
+            }
+        }
+
+        function openDevTools() {
+            if (tabs[window.activeTab].webview.children[1].isDevToolsOpened()) {
+                tabs[window.activeTab].webview.children[1].closeDevTools();
+            } else {
+                tabs[window.activeTab].webview.children[1].openDevTools();
+            }
+        }
+
+        window.addEventListener('load', () => {
+            openTab("https://school.equestria.dev", false, true);
+            openTab("../fragments/about.html", false, true, true);
+
+            openHome();
+            tabs[0].fixed = false;
+
+            if (localStorage.getItem("experiments-temp")) {
+                localStorage.removeItem("experiments-temp");
+                switchToTab(1);
+            }
+        });
+
+        async function getToken() {
+            let token;
+
+            try {
+                token = await tabs.filter(i => i.small)[0].webview.children[1].executeJavaScript("matrixChat.stores.client.http.opts.accessToken");
+            } catch (e) {
+                token = null;
+            }
+
+            ipcRenderer.send("3pid-token", token);
+            return token;
+        }
+
+        function focusAddressBar() {
+            window.tabs[window.activeTab].webview.querySelector('[id$="-bar-address"]').focus();
+        }
+
+        function focusAbout() {
+            switchToTab(1);
+        }
+    </script>
+
+    <div id="loading-modal" class="modal modal-lg" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-body">
+                    <div style="text-align: center;">Waiting for remote update, please wait. This might take a few minutes.</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

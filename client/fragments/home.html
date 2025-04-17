@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>New Tab</title>
+    <link rel="icon" href="../assets/icons/newtab.svg">
+    <link href="../assets/bootstrap/bs.css" rel="stylesheet">
+    <script src="../assets/bootstrap/bs.js"></script>
+    <style>
+        @media (prefers-color-scheme: dark) {
+            main {
+                filter: invert(1) hue-rotate(180deg);
+                background-color: #ddd !important;
+            }
+        }
+
+        code {
+            color: inherit;
+        }
+    </style>
+</head>
+<body>
+    <div style="position: fixed; inset: 0; background-image: url('../assets/mascot.png'); z-index: 5; pointer-events: none; background-size: contain; background-repeat: no-repeat; background-position: right;"></div>
+
+    <main style="background-color: #eee; position: fixed; inset: 0; overflow: auto;">
+        <div style="margin-left: auto; margin-right: auto; width: max-content; margin-top: 50px;">
+            <img src="../assets/icon.png" style="filter: invert(1) hue-rotate(180deg); width: 96px; vertical-align: middle;">
+            <span style="vertical-align: middle; margin-left: 20px; font-size: 36px;">Chatroom</span>
+        </div>
+        <form action="https://duckduckgo.com">
+            <input id="search" type="text" name="q" class="form-control" onclick="focusAddressBar();" placeholder="Search with DuckDuckGo or enter address" style="margin-top: 50px; width: 50%; margin-left: auto; margin-right: auto;">
+        </form>
+
+        <script>
+            function focusAddressBar() {
+                document.getElementById("search").blur();
+                chatroom.focusAddressBar();
+            }
+        </script>
+
+        <div class="container" style="margin-top: 50px; margin-bottom: 50px;">
+            <hr style="margin-bottom: 30px;">
+
+            <h3>Chatroom is being shut down in June 2024</h3>
+            <p>Starting June 11th 2024, we will discontinue and shut down all the Chatroom services. If you have important data or messages you need to export or backup, please use the corresponding Chatroom features before June 11th to ensure you keep access to your data. <b>Equestria.dev makes no guarantee whatsoever that data will remain accessible past this date.</b></p>
+
+            <div class="alert alert-warning">
+                <b>Chatroom is now released under the GNU AGPLv3 license.</b> <a href="https://journal.equestria.dev/home/recent#id-2024-04-18-switching-licenses-for-all-open-source-software-from-mit-to-gnu-agplv3" target="_blank">Equestria.dev has recently announced</a> that it would be releasing all of its software under the GNU AGPLv3 license instead of the MIT license, to further tighten control over actors making use of the source code. This might affect your use of Chatroom if you are running a modified version.
+            </div>
+
+            <h3>What's new in Chatroom?</h3>
+
+            <h5>Chatroom 2.9.6 "Blep"</h5>
+            <p>Chatroom 3 has now been abandoned. We will bring a few features from Chatroom 3 to Chatroom 2, but Chatroom 3 is now unavailable.</p>
+            <ul>
+                <li>
+                    <b>2.9.7</b>
+                    <ul>
+                        <li>Added the official exact shut down date (June 11th)</li>
+                    </ul>
+                </li>
+                <li>
+                    <b>2.9.6</b>
+                    <ul>
+                        <li>Removed Chatroom Spyglass and Chatroom Platforms</li>
+                        <li>Added a "Don't ask me again" checkbox to the quit dialog</li>
+                    </ul>
+                </li>
+                <li>
+                    <b>2.9.5</b>
+                    <ul>
+                        <li>Change of the license from MIT to GNU AGPLv3</li>
+                        <li>Announcement of Chatroom's shut down in June</li>
+                    </ul>
+                </li>
+                <li>
+                    <b>2.9.4</b>
+                    <ul>
+                        <li>Removal of all the Chatroom 3 feature flags</li>
+                        <li>The Spyglass loading dialog is now hidden all the time</li>
+                        <li>The about screen from Chatroom 3 is now in Chatroom 2</li>
+                    </ul>
+                </li>
+            </ul>
+
+            <h5>Chatroom 2.8.3 (Long Term Support)</h5>
+            <p>Chatroom 3 (Codename "Heeler") is now under development (it can be enabled with a few secret options)! While regular Chatroom features will continue to function normally, select people will be able to test new features. Contact your administrator for details. This does mean that Chatroom 2.8 is the last version of Chatroom 2 before the release of Chatroom 3. This old version of Chatroom will only contain bug fixes and no new features will be added.</p>
+            <ul>
+                <li><b>2.8.3 Fix:</b> Chatroom no longer gets stuck on connecting with the Spyglass server.</li>
+                <li><b>2.8.2 Fix:</b> Chatroom no longer uses a lot of CPU resources and creates a lot of processes (about 60).</li>
+                <li><b>2.8.1 Fix:</b> Links can now open in new tabs if indicated by the website or if you hold down Cmd/Ctrl while clicking it.</li>
+                <li><b>2.8.0 Fix:</b> Clicking on the search bar on the home page now focuses the search bar on top.</li>
+                <li>
+                    <b>2.8.0 Feature:</b> Introducing Chatroom Spyglass: a completely transparent utility to collect system information and help improve Chatroom.
+                    <ul>
+                        <li>Chatroom automatically detects if your device is eligible to Spyglass. If it is making a mistake, please contact your administrator.</li>
+                        <li>Users with the "forcespyglass" experiment set to "Enabled" will always have Spyglass enabled.</li>
+                        <li>Contact your administrator for details regarding what data is collected and how this data is used.</li>
+                    </ul>
+                </li>
+                <li>
+                    <b>2.8.0 Fix:</b> The <code>Chatroom3PID</code> API is now deprecated and will be removed in Chatroom 3.
+                </li>
+            </ul>
+
+            <h5>Chatroom 2.7.3</h5>
+            <ul>
+                <li><b>Fix:</b> Fixed a bug where it would be possible to close the chat tab</li>
+                <li><b>UI:</b> Added a clear separation between the chat tab and the rest of the Chatroom tabs</li>
+            </ul>
+
+            <h5>Chatroom 2.7.2</h5>
+            <ul>
+                <li><b>UI:</b> Say hello to Bani Temari, the new Chatroom mascot! She is an adorable and cheerful cat who helps make Chatroom better for you.</li>
+            </ul>
+
+            <h5>Chatroom 2.7.1</h5>
+            <ul>
+                <li><b>Fix:</b> On macOS, the "bounce" effect is now working</li>
+                <li><b>Fix:</b> Autoplay is now disabled by default (as it is in other browsers)</li>
+                <li><b>Fix:</b> Web SQL being deprecated in Chromium, it is now disabled by default in Chatroom</li>
+                <li><b>Feature:</b> Very early and experimental support for Chrome extensions have been added</li>
+            </ul>
+
+            <h5>Chatroom 2.7.0</h5>
+            <ul>
+                <li><b>Fix:</b> The experimental Chatroom VPN trial has been removed since it was too unstable</li>
+                <li>
+                    <b>Feature:</b> A new <code>Chatroom3PID</code> API for third-party authentication has been added
+                    <ul>
+                        <li>Test it <a href="https://cdn.equestria.dev/_nocache/crtest.html">here</a>.</li>
+                        <li><code>Chatroom3PID.isPossible()</code> returns a Promise that resolves to true if third-party authentication is possible, false otherwise.</li>
+                        <li><code>Chatroom3PID.getToken()</code> returns a Promise that resolves to a string if third-party authentication is possible and user allowed it, null otherwise.</li>
+                        <li><b>WARNING:</b> Make sure you only use third-party authentication <b>WITH TRUSTED WEBSITES</b> as this gives the website full access to your account.</li>
+                    </ul>
+                </li>
+            </ul>
+
+            <h5>Chatroom 2.6.2</h5>
+            <ul>
+                <li>This is just an update to get a few upcoming features working, nothing to see here</li>
+            </ul>
+
+            <h5>Chatroom 2.6.1</h5>
+            <ul>
+                <li><b>Fix:</b> Fixed a bug that made it impossible to quit Chatroom on non-macOS platforms</li>
+                <li><b>Fix:</b> Fixed a long-lasting bug that made the chat appear slightly off after starting up</li>
+                <li><b>Feature:</b> Removed the ability to have multiple instances of Chatroom open</li>
+                <li><b>Feature:</b> Added an option to show the About dialog on the tab bar</li>
+                <li><b>Feature:</b> Added an option to show the system emoji picker on macOS and Windows in the right click menu</li>
+            </ul>
+
+            <h5>Chatroom 2.6.0</h5>
+            <ul>
+                <li><b>Fix:</b> Fixed a bug that was causing some buttons to be hidden underneath the window controls on Windows</li>
+                <li><b>Fix:</b> Fixed a bug that was causing the window controls on Windows to show up in light theme even when dark theme is on</li>
+                <li><b>Fix:</b> Fixed a bug that was causing an error message to show up when pressing Ctrl/Cmd+W on Chrome Dev Tools</li>
+                <li><b>Fix:</b> Improved dark theme support introduced in version 2.5.0</li>
+                <li><b>Fix:</b> Fixed a bug where some websites would show a broken tab icon</li>
+                <li><b>Feature:</b> Introduced a new launcher experience</li>
+                <li><b>Feature:</b> Made the tab bar shrink, so you can open a lot more tabs at once (about 30 with the default window size)</li>
+                <li><b>Feature:</b> Added a new home page, replacing the DuckDuckGo homepage</li>
+                <li><b>Feature:</b> Added a confirmation dialog when closing Chatroom</li>
+                <li><b>Feature:</b> A basic right click menu has been added, giving you the option to (for example) open links in new tabs</li>
+            </ul>
+
+            <h5>Chatroom 2.5.1</h5>
+            <ul>
+                <li><b>Fix:</b> Fixed a bug that prevented accessing the chat</li>
+            </ul>
+
+            <h5>Chatroom 2.5.0</h5>
+            <ul>
+                <li><b>Fix:</b> ixed a bug that was making it possible to scroll the main browser UI</li>
+                <li><b>Feature:</b> Added dark theme support</li>
+                <li><b>Feature:</b> Added an option to turn the built-in ad blocker on or off</li>
+                <li><b>Feature:</b> Added new modern icons</li>
+            </ul>
+
+            <hr style="margin-bottom: 30px;">
+
+            <h3>Credits</h3>
+
+            <ul>
+                <li>Bani Temari is © 2020-2021 ezpups, All Rights Reserved. Used by Chatroom under license from Furbooru.</li>
+            </ul>
+        </div>
+    </main>
+</body>
+</html>

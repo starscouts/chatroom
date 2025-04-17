@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Chatroom</title>
+</head>
+<body style="margin: 0; user-select: none;">
+<img id="bg" style="z-index: -1; position: fixed;" src="./loader.jpg" alt="">
+<div style="position: fixed;inset: 0;background-image: url('./loader.jpg');z-index: 9999;background-size: cover;background-position: center;"></div>
+<div style="position: fixed; inset: 0; z-index: 9999; -webkit-app-region: drag;"></div>
+
+<div style="position: fixed; bottom: 60px; left: 0; right: 0; z-index: 99999;">
+    <div id="progress-outer" style="background-color: rgba(255,255,255,0.1); width: 173px; height: 8px; border-radius: 2px; margin-left: auto; margin-right: auto;">
+        <div style="background-color: #fff; opacity: .3; width: 0; height: 8px; border-radius: 2px;" id="progress"></div>
+    </div>
+</div>
+
+<script>
+    document.getElementById("bg").onload = () => {
+        const { ipcRenderer } = require('electron');
+
+        ipcRenderer.on('local', (_, data) => {
+            download(data);
+        });
+
+        ipcRenderer.on('download', (_) => {
+            download(null);
+        });
+
+        function download(data) {
+            const axios = require('./node_modules/axios/dist/node/axios.cjs');
+            const fs = require("fs");
+            const zlib = require("zlib");
+            const crypto = require("crypto");
+
+            let tempDir = require('@electron/remote').app.getPath('userData') + "/Chatroom";
+            if (fs.existsSync(tempDir)) fs.rmSync(tempDir, { recursive: true });
+            fs.mkdirSync(tempDir);
+
+            function downloadClient() {
+                document.getElementById("progress-outer").style.display = "";
+
+                return new Promise(async (res) => {
+                    const response = await axios({
+                        url: "http://51.68.173.117:21938/update/client.lctpk?_" + require('crypto').randomBytes(64).toString("hex"),
+                        method: 'GET',
+                        responseType: 'blob',
+                        onDownloadProgress: (event) => {
+                            document.getElementById("progress").style.width = ((event.loaded / event.total) * 100) + "%";
+                        }
+                    });
+
+                    res(JSON.parse(zlib.brotliDecompressSync(Buffer.from(await response.data.arrayBuffer())).toString()).map(i => {
+                        if (i['content']) i['content'] = zlib.brotliDecompressSync(Buffer.from(i['content'], "base64"));
+                        if (i['hash']) i['hash'] = crypto.createHash("sha256").update(i['content']).digest("base64") === i['hash'];
+                        return i;
+                    }));
+                });
+            }
+
+            (async () => {
+                let _client = await downloadClient();
+                let files = [..._client];
+
+                let total = files.length;
+                let index = 0;
+
+                for (let file of files) {
+                    if (file.type === "file" && !file.hash) {
+                        alert("Unable to continue: file " + file.name + " is corrupted");
+                        window.close();
+                    }
+
+                    if (file.type === "file") {
+                        fs.writeFileSync(tempDir + "/" + file.name, file.content);
+                    } else {
+                        if (!fs.existsSync(tempDir + "/" + file.name)) fs.mkdirSync(tempDir + "/" + file.name);
+                    }
+
+                    index++;
+                    document.getElementById("progress").style.width = ((index / total) * 100) + "%";
+                }
+
+                document.body.classList.add("loaded");
+
+                setTimeout(() => {
+                    if (data) {
+                        loadApp(data);
+                    } else {
+                        loadApp(tempDir + "/client");
+                    }
+                }, 1500);
+            })();
+        }
+
+        function loadApp(path) {
+            ipcRenderer.send("start", path);
+        }
+    }
+</script>
+</body>
+</html>
